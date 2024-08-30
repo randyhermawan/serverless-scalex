@@ -1,0 +1,118 @@
+"use strict";
+
+const AwsReq = require("./lib/awsReq");
+const DeployFunc = require("./lib/deployFn");
+
+class ServerlessPlugin {
+  constructor(serverless, options, { log }) {
+    this.serverless = serverless;
+    this.options = options;
+    this.logger = log;
+
+    this.awsReq = new AwsReq(serverless, options, log);
+    this.deployFn = new DeployFunc(serverless, options, log);
+
+    this.hooks = {
+      "before:deploy:deploy": this.Validate.bind(this),
+      "after:deploy:deploy": this.Deploy.bind(this),
+      "after:remove:remove": this.Destroy.bind(this),
+    };
+  }
+
+  Validate = async () => {
+    const bucketName = this.serverless.service.custom?.scalex?.bucketName;
+    if (!bucketName) {
+      this.logger.error(
+        `Missing required serverless parameter at custom.scalex.bucketName`
+      );
+      process.exit(1);
+    }
+
+    Object.entries(this.serverless.service.functions).flatMap(([_, fnDef]) =>
+      (fnDef.events || [])
+        .filter((evt) => evt.httpApi)
+        .map((evt) => {
+          if ((evt.httpApi.scale || false) && !evt.httpApi.scaleUrl) {
+            this.logger.error(
+              `Missing required serverless parameter at events[x].httpApi.scaleUrl`
+            );
+            process.exit(1);
+          }
+        })
+    );
+  };
+
+  Deploy = async () => {
+    this._checkS3Bucket();
+
+    const apiId = await this._getApiId();
+    const apiData = {
+      ApiId: apiId,
+      Integrations: await this.awsReq.ListIntegrations(apiId),
+      Routes: await this.awsReq.ListRoutes(apiId),
+    };
+
+    const configurePromises = Object.entries(
+      this.serverless.service.functions
+    ).flatMap(([fnName, fnDef]) =>
+      (fnDef.events || [])
+        .filter((evt) => evt.httpApi)
+        .map((evt) =>
+          this.deployFn.ConfigureEvent(fnName, fnDef, evt.httpApi, apiData)
+        )
+    );
+
+    const results = await Promise.all(configurePromises);
+    const integrationIds = [...results].filter((v) => v !== undefined);
+
+    this.deployFn.PostConfigure(apiData.ApiId, integrationIds);
+  };
+
+  Destroy = async () => {
+    const { serverless, awsReq, logger } = this;
+
+    this._checkS3Bucket();
+
+    const bucketName = serverless.service.custom?.scalex?.bucketName;
+    const key = `${serverless.service.provider.stage}-${serverless.service.service}-${serverless.service.provider.region}-scalex-state.txt`;
+
+    try {
+      await awsReq.S3DeleteObject(bucketName, key);
+      console.log(`[scalex event] scalex state file deleted`);
+    } catch (error) {
+      logger.error(`Error deleting scalex state file: ${error}`);
+      process.exit(1);
+    }
+  };
+
+  _checkS3Bucket = () => {
+    const _self = this;
+
+    const bucketName = _self.serverless.service.custom?.scalex?.bucketName;
+
+    _self.awsReq
+      .S3CheckBucket(bucketName)
+      .then(() => {
+        console.log(`[scalex event] state bucket '${bucketName}' is valid`);
+      })
+      .catch(function (error) {
+        _self.logger.error(`Error retrieving s3 bucket info: ${error}`);
+        process.exit(1);
+      });
+  };
+
+  _getApiId = async () => {
+    const _self = this;
+
+    let apiId = _self.serverless.service.provider.httpApi?.id;
+    if (!apiId) {
+      apiId = await _self.awsReq.GetApiId(
+        `${_self.options.stage}-${_self.serverless.service.service}`
+      );
+    }
+
+    return apiId;
+  };
+}
+
+module.exports = ServerlessPlugin;

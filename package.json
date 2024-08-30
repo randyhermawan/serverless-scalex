@@ -1,0 +1,23 @@
+{
+  "name": "serverless-scalex",
+  "version": "1.0.0",
+  "description": "Serverless SCALEX plugin for independent and flexible lambda scaling via app runner",
+  "main": "index.js",
+  "author": "Randy Hermawan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/randyhermawan/serverless-scalex.git"
+  },
+  "keywords": [
+    "serverless",
+    "scale",
+    "http_proxy",
+    "apprunner"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/randyhermawan/serverless-scalex/issues"
+  },
+  "homepage": "https://github.com/randyhermawan/serverless-scalex#readme",
+  "dependencies": {}
+}
