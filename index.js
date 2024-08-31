@@ -138,7 +138,7 @@ class ServerlessPlugin {
 
       await Promise.all(
         remoteState.map(async (integrationId) => {
-          await _self.awsReq.DeleteIntegration(apiData.ApiId, integrationId);
+          await awsReq.DeleteIntegration(apiData.ApiId, integrationId);
           console.log(
             `[scalex event] HTTP_PROXY integration '${integrationId}' removed`
           );
