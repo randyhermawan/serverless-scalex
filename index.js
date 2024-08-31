@@ -133,6 +133,27 @@ class ServerlessPlugin {
     const key = `${serverless.service.provider.stage}-${serverless.service.service}-${serverless.service.provider.region}-scalex-state.txt`;
 
     try {
+      const resp = await awsReq.S3GetObject(bucketName, key);
+      const remoteState = resp.Body.toString().split("__");
+
+      await Promise.all(
+        remoteState.map(async (integrationId) => {
+          await _self.awsReq.DeleteIntegration(apiData.ApiId, integrationId);
+          console.log(
+            `[scalex event] HTTP_PROXY integration '${integrationId}' removed`
+          );
+        })
+      );
+
+      console.log(`[scalex event] all deployed HTTP_PROXY integration removed`);
+    } catch (error) {
+      if (error.code !== "AWS_S3_GET_OBJECT_NO_SUCH_KEY") {
+        logger.error(`Error checking scalex state file: ${error}`);
+        process.exit(1);
+      }
+    }
+
+    try {
       await awsReq.S3DeleteObject(bucketName, key);
       console.log(`[scalex event] scalex state file deleted`);
     } catch (error) {

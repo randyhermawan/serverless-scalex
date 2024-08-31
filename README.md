@@ -13,32 +13,27 @@ npm uninstall serverless-scalex
 
 ## Serverless Configuration
 
-There isn't any configuration needed at the top level, you just need to replace `sns` event with `snsx` event at function level.
-
-The configuration should be defined either like the first or the second sample.
-
 ```
 events:
   - httpApi:
       scale: true
       path: /api/v1/ping
       method: get
-      scale: # can be omitted
+      scale: # can be omitted for a false
         region: [ap-southeast-1, ap-south-1] # regions where deployment will be scaled UP
         httpUrl: HTTP_ENDPOINT/api/v1/something
+        keepAuthorizer: true # can be omitted for a false
 
 custom:
   scalex:
     bucketName: "scalex-state-bucket-8k37fy"
 ```
 
-When you set `scale: true`, `scaleUrl` becomes a required parameter. A new HTTP integration will be created and the route integration will be switched to HTTP without deleting the Lambda integration.
+When you set `scale: true`, `region` and `httpUrl` becomes a required parameter. A new HTTP integration will be created and the route integration will be switched to HTTP without deleting the Lambda integration.
 
 When you later set the `scale: false`, the route integration will be switched to the Lambda integration and the HTTP integration will be deleted.
 
 The `custom.scalex.bucketName` is a required parameter to store the state file. We use a state file to keep track of created HTTP integration so we can later remove the integration when there are configuration changes.
-
-When the configuration is deployed, there will be warning related to `Invalid configuration encountered` of `unsupported function event` but in our deployment, it is safe to ignore.
 
 ---
 
