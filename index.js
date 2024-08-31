@@ -28,15 +28,34 @@ class ServerlessPlugin {
       process.exit(1);
     }
 
-    Object.entries(this.serverless.service.functions).flatMap(([_, fnDef]) =>
-      (fnDef.events || [])
-        .filter((evt) => evt.httpApi)
-        .map((evt) => {
-          if ((evt.httpApi.scale || false) && !evt.httpApi.scaleUrl) {
-            this.logger.error(
-              `Missing required serverless parameter at events[x].httpApi.scaleUrl`
-            );
-            process.exit(1);
+    Object.entries(this.serverless.service.functions).flatMap(
+      ([fnName, fnDef]) =>
+        (fnDef.events || []).map((evt, i) => {
+          if (evt.httpApi.scale) {
+            if (!evt.httpApi.scale.region) {
+              this.logger.error(
+                `Missing required parameter at ${fnName}.events[${i}].httpApi.scale.region`
+              );
+              process.exit(1);
+            }
+
+            if (!Array.isArray(evt.httpApi.scale.region)) {
+              this.logger.error(
+                `Wrong parameter type: Requires an Array at ${fnName}.events[${i}].httpApi.scale.region`
+              );
+              process.exit(1);
+            }
+
+            if (
+              (evt.httpApi.scale.region.includes(this.options.region) ||
+                false) &&
+              !evt.httpApi.scale.httpUrl
+            ) {
+              this.logger.error(
+                `Missing required serverless parameter at ${fnName}.events[${i}].httpApi.scale.httpUrl`
+              );
+              process.exit(1);
+            }
           }
         })
     );

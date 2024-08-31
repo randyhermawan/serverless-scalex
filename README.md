@@ -21,15 +21,11 @@ The configuration should be defined either like the first or the second sample.
 events:
   - httpApi:
       scale: true
-      scaleUrl: HTTP_ENDPOINT/api/v1/something
       path: /api/v1/ping
       method: get
-
-events:
-  - httpApi:
-      scale: false # or omitted
-      path: /api/v1/ping
-      method: get
+      scale: # can be omitted
+        region: [ap-southeast-1, ap-south-1] # regions where deployment will be scaled UP
+        httpUrl: HTTP_ENDPOINT/api/v1/something
 
 custom:
   scalex:
