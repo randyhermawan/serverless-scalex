@@ -44,6 +44,10 @@ class ServerlessPlugin {
                 minItems: 1,
               },
               httpUrl: { type: "string" },
+              keepAuthorizer: {
+                type: "boolean",
+                default: false,
+              },
             },
             required: ["region", "httpUrl"], // Ensures both properties must exist
           },
