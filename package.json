@@ -1,7 +1,7 @@
 {
   "name": "serverless-scalex",
-  "version": "1.0.1",
-  "description": "Serverless SCALEX plugin for independent and flexible lambda scaling via app runner",
+  "version": "1.0.2",
+  "description": "Serverless SCALEX plugin for independent and flexible lambda scaling via HTTP_PROXY",
   "main": "index.js",
   "author": "Randy Hermawan",
   "repository": {

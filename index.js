@@ -17,6 +17,39 @@ class ServerlessPlugin {
       "after:deploy:deploy": this.Deploy.bind(this),
       "after:remove:remove": this.Destroy.bind(this),
     };
+
+    serverless.configSchemaHandler.defineCustomProperties({
+      type: "object",
+      properties: {
+        scalex: {
+          type: "object",
+          properties: { bucketName: { type: "string" } },
+          required: ["bucketName"],
+        },
+      },
+      required: ["scalex"],
+    });
+
+    serverless.configSchemaHandler.defineFunctionEventProperties(
+      "aws",
+      "httpApi",
+      {
+        properties: {
+          scale: {
+            type: "object",
+            properties: {
+              region: {
+                type: "array",
+                items: { type: "string" },
+                minItems: 1,
+              },
+              httpUrl: { type: "string" },
+            },
+            required: ["region", "httpUrl"], // Ensures both properties must exist
+          },
+        },
+      }
+    );
   }
 
   Validate = async () => {
