@@ -1,6 +1,6 @@
 {
   "name": "serverless-scalex",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Serverless SCALEX plugin for independent and flexible lambda scaling via HTTP_PROXY",
   "main": "index.js",
   "author": "Randy Hermawan",

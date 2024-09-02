@@ -136,18 +136,22 @@ class ServerlessPlugin {
 
     try {
       const resp = await awsReq.S3GetObject(bucketName, key);
-      const remoteState = resp.Body.toString().split("__");
+      if (resp.Body.toString() != "") {
+        const remoteState = resp.Body.toString().split("__");
 
-      await Promise.all(
-        remoteState.map(async (integrationId) => {
-          await awsReq.DeleteIntegration(apiId, integrationId);
-          console.log(
-            `[scalex event] HTTP_PROXY integration '${integrationId}' removed`
-          );
-        })
-      );
+        await Promise.all(
+          remoteState.map(async (integrationId) => {
+            await awsReq.DeleteIntegration(apiId, integrationId);
+            console.log(
+              `[scalex event] HTTP_PROXY integration '${integrationId}' removed`
+            );
+          })
+        );
 
-      console.log(`[scalex event] all deployed HTTP_PROXY integration removed`);
+        console.log(
+          `[scalex event] all deployed HTTP_PROXY integration removed`
+        );
+      }
     } catch (error) {
       if (error.code !== "AWS_S3_GET_OBJECT_NO_SUCH_KEY") {
         logger.error(
